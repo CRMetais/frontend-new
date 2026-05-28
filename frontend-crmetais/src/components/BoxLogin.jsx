@@ -94,7 +94,7 @@ export function BoxLogin() {
 
     return (
 
-        <div className='boxLogin container-sm border h-50 rounded-3 p-4 shadow-sm'>
+        <div className='boxLogin container-sm border rounded-3 p-4 shadow-sm'>
 
 
             <form
