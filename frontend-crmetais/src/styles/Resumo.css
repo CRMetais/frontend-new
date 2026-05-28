@@ -1,0 +1,16 @@
+.destino-container {
+    min-width: 300px;
+}
+
+@media (max-width: 991px) {
+
+    .destino-container {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .header {
+        align-items: stretch !important;
+    }
+
+}

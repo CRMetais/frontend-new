@@ -1,0 +1,11 @@
+.container-botao-cliente {
+    width: auto;
+}
+
+@media (max-width: 991px) {
+
+    .container-botao-cliente {
+        width: 100%;
+    }
+
+}

@@ -1,0 +1,15 @@
+.container-fornecedores {
+    margin-top: 24px;
+}
+
+.container-botoes-historico {
+    width: auto;
+}
+
+@media (max-width: 991px) {
+
+    .container-botoes-historico {
+        width: 100%;
+    }
+
+}

@@ -1,0 +1,4 @@
+.kpiValor {
+    font-size: clamp(16px, 4vw, 22px) !important;
+    /* font-size: 100px; */
+}

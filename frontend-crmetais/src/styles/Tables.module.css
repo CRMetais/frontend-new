@@ -1,0 +1,82 @@
+.tableContainer {
+    max-height: 600px;
+    overflow: auto;
+    border-radius: 4px;
+
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #FACC15 transparent;
+}
+
+.tableCustom {
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 18px;
+}
+
+.tableCustom th,
+.tableCustom td {
+    white-space: nowrap;
+}
+
+/* Cabeçalho */
+.tableCustom thead th {
+    position: sticky;
+    top: 0;
+    background-color: #020618;
+    color: white;
+    z-index: 10;
+}
+
+/* Zebra */
+.tableCustom tbody tr:nth-child(odd) td {
+    background-color: #ffffff;
+}
+
+.tableCustom tbody tr:nth-child(even) td {
+    background-color: rgb(240, 240, 240);
+}
+
+/* Bordas arredondadas */
+.tableCustom thead th:first-child {
+    border-top-left-radius: 4px;
+}
+
+.tableCustom thead th:last-child {
+    border-top-right-radius: 4px;
+}
+
+.tableCustom tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 4px;
+}
+
+.tableCustom tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 4px;
+}
+
+/* Scrollbar */
+.tableContainer::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+    background: #FACC15;
+    border-radius: 999px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb:hover {
+    background: #eab308;
+}
+
+/* Remove setinhas */
+.tableContainer::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}

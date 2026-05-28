@@ -1,0 +1,18 @@
+.boxLogin {
+    max-width: 500px !important;
+}
+
+.logo {
+    width: 50px !important;
+    height: 50px !important;
+    align-self: center;
+}
+
+.titulo {
+    font-size: 40px !important;
+    margin: 0;
+}
+
+.subtitulo {
+    font-size: 22px;
+}

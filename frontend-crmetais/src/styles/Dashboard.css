@@ -1,0 +1,15 @@
+@media (max-width: 991px) {
+
+    .filtros-dashboard {
+        width: 100%;
+    }
+
+    .filtros-dashboard > div {
+        width: 100%;
+    }
+
+    .filtros-dashboard button {
+        width: 100%;
+    }
+
+}

@@ -1,0 +1,22 @@
+:root {
+    --amarelo: #FACC15 !important;
+    --amareloHover: #f0b100 !important;
+}
+
+.btn-primary {
+    background-color: var(--amarelo) !important;
+    border: none !important;
+    transition: linear 0.3s !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--amareloHover) !important;
+}
+
+@media (max-width: 991px) {
+
+    .btn-mobile-full {
+        width: 100% !important;
+    }
+
+}

@@ -1,0 +1,11 @@
+.container-botao-gestao-de-dados {
+    width: auto;
+}
+
+@media (max-width: 991px) {
+
+    .container-botao-gestao-de-dados {
+        width: 100%;
+    }
+
+}
