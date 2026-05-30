@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   cadastrarUsuario,
   editarUsuario,
@@ -6,9 +6,12 @@ import {
   getUsuarioLogadoId,
   salvarUsuarioLogado,
 } from "../services/usuarioService";
+import api from "../services/apiClient";
 
 const SENHA_FORTE_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+const CACHE_KEY = "cadastro_colaborador_rascunho";
 
 const DADOS_INICIAIS = {
   nome: "",
@@ -53,6 +56,8 @@ export default function ColaboradorModal({
   const [dados, setDados] = useState(DADOS_INICIAIS);
   const [erros, setErros] = useState({});
 
+  const carregandoRascunho = useRef(true);
+
   // ================================
   // Carregar dados ao abrir em edição
   // ================================
@@ -82,6 +87,81 @@ export default function ColaboradorModal({
 
     carregar();
   }, [show, modoEdicao, colaboradorId]);
+
+  useEffect(() => {
+
+  if (!show) return;
+  if (modoEdicao) return;
+
+  async function buscarRascunho() {
+
+    try {
+
+      const res =
+        await api.get(`/api/cache/${CACHE_KEY}`);
+
+      if (res.data) {
+
+        setDados((prev) => ({
+          ...prev,
+          nome: res.data.nome || "",
+          email: res.data.email || "",
+          cargo: res.data.cargo || "",
+        }));
+
+      }
+
+    } catch {
+
+      // sem rascunho
+
+    } finally {
+
+      carregandoRascunho.current = false;
+
+    }
+
+  }
+
+  buscarRascunho();
+
+}, [show, modoEdicao]);
+
+useEffect(() => {
+
+  if (modoEdicao) return;
+
+  if (carregandoRascunho.current) return;
+
+  const timer = setTimeout(async () => {
+
+    try {
+
+      await api.post(
+        `/api/cache/${CACHE_KEY}`,
+        {
+          nome: dados.nome,
+          email: dados.email,
+          cargo: dados.cargo,
+        }
+      );
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
+  }, 100);
+
+  return () => clearTimeout(timer);
+
+}, [
+  dados.nome,
+  dados.email,
+  dados.cargo,
+  modoEdicao
+]);
 
   // ================================
   // Validação em tempo real
@@ -175,12 +255,17 @@ export default function ColaboradorModal({
           }
         }
       } else {
+
         await cadastrarUsuario({
           nome: dados.nome,
           email: dados.email,
           senha: dados.senha,
           cargo: dados.cargo,
         });
+
+        await api.delete(
+          `/api/cache/${CACHE_KEY}`
+        );
       }
 
       onSuccess();
@@ -315,10 +400,23 @@ export default function ColaboradorModal({
           </div>
 
           <div className="modal-footer">
-            <button
+           <button
               className="btn btn-outline-secondary"
-              onClick={onClose}
               disabled={loading}
+              onClick={async () => {
+
+                try {
+                  await api.delete(`/api/cache/${CACHE_KEY}`);
+                } catch (err) {
+                  console.error(err);
+                }
+
+                setDados(DADOS_INICIAIS);
+                setErros({});
+
+                onClose();
+
+              }}
             >
               Cancelar
             </button>

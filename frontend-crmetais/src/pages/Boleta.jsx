@@ -28,6 +28,11 @@ export function Boleta() {
   const [carregando, setCarregando] = useState(false);
   const [salvandoNota, setSalvandoNota] = useState(false);
 
+  const [carregandoCache, setCarregandoCache] = useState(
+    () => !localStorage.getItem("boletas_rascunho")
+  );
+
+
   const boletaAtual = boletas.find((b) => b.id === abaAtiva) || boletas[0];
 
   const atualizarBoletaAtual = useCallback(
@@ -149,6 +154,123 @@ export function Boleta() {
   useEffect(() => {
     document.title = "CR Metais | Boleta";
   });
+
+  // ─── 🔄 CARGA INICIAL DO RASCUNHO (Redis) ─────────────────────────────────
+  useEffect(() => {
+    const buscarRascunhoRedis = async () => {
+      try {
+        const res = await api.get("/boletas/rascunho");
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          // Trata os dados de forma defensiva para evitar estouros de UI
+          const boletasTratadas = res.data.map(b => ({
+            ...b,
+            id: Number(b.id),
+            itensBoleta: Array.isArray(b.itensBoleta) ? b.itensBoleta : [],
+            clienteSelecionadoId: b.clienteSelecionadoId || "",
+            classeNota: b.classeNota || "RETIRADA",
+            tipoNota: b.tipoNota || "SAÍDA",
+            pagamentoConfirmado: !!b.pagamentoConfirmado
+          }));
+
+          setBoletas(boletasTratadas);
+          setAbaAtiva(boletasTratadas[0].id);
+
+          // Atualiza o sequenciador global para novas abas não colidirem IDs
+          const maiorId = Math.max(...boletasTratadas.map(b => b.id));
+          contadorBoleta = maiorId + 1;
+        }
+      } catch (err) {
+        console.error("Erro ao resgatar rascunho do Redis", err);
+      } finally {
+        setCarregandoCache(false); // Libera o esqueleto/carregamento da tela
+      }
+    };
+    buscarRascunhoRedis();
+  }, []);
+
+  // ─── 💾 AUTO-SALVAMENTO (localStorage + Redis) ───────────────────────────
+  useEffect(() => {
+    if (carregandoCache) return;
+
+    // Salva no localStorage de forma síncrona (sobrevive a navegação SPA)
+    try {
+      localStorage.setItem("boletas_rascunho", JSON.stringify(boletas));
+    } catch (e) {
+      console.error("Falha ao salvar no localStorage", e);
+    }
+
+    // Sincroniza com Redis via debounce (persistência remota)
+    const sincronizarComRedis = async () => {
+      try {
+        await api.post("/boletas/rascunho", boletas);
+        console.log("Rascunho sincronizado no Redis automaticamente.");
+      } catch (err) {
+        console.error("Falha ao salvar rascunho automaticamente", err);
+      }
+    };
+
+    const delayDebounce = setTimeout(() => {
+      sincronizarComRedis();
+    }, 100);
+
+    return () => clearTimeout(delayDebounce);
+  }, [boletas, carregandoCache]);
+
+  // ─── Carga inicial (Produtos e Tabelas) ───────────────────────────────────
+  useEffect(() => {
+    const buscar = async () => {
+      try {
+        const [resProdutos, resPrecos] = await Promise.all([
+          api.get("/produtos"),
+          api.get("/preco-produto-tabela"),
+        ]);
+        setProdutos(resProdutos.data?.content ?? resProdutos.data ?? []);
+        setPrecosTabela(resPrecos.data?.content ?? resPrecos.data ?? []);
+      } catch (err) {
+        console.error("Erro ao carregar produtos/preços", err);
+      }
+    };
+    buscar();
+  }, []);
+
+  // ─── Carga de clientes/fornecedores ──────────────────────────────────────
+  useEffect(() => {
+    if (carregandoCache) return; // Bloqueia limpezas acidentais de estado durante o load inicial
+    
+    const buscarEntidades = async () => {
+      setCarregando(true);
+      const endpoint = tipoNota === "ENTRADA" ? "fornecedores" : "clientes";
+      try {
+        const res = await api.get(`/${endpoint}`);
+        setClientes(res.data?.content ?? res.data ?? []);
+      } catch (err) {
+        console.error("Erro ao carregar entidades", err);
+        setClientes([]);
+      }
+
+      if (tipoNota === "ENTRADA") {
+        try {
+          const resTabelas = await api.get("/tabelas-precos/fornecedores");
+          const tabelas = resTabelas.data?.content ?? resTabelas.data ?? [];
+          const mapa = {};
+          tabelas.forEach(item => {
+            const id = item.idFornecedor ?? item.idCliente ?? item.id;
+            if (id) mapa[id] = (item.nomeTabela ?? item.tabela ?? "").toUpperCase();
+          });
+          setTabelaPorFornecedor(mapa);
+        } catch {
+          setTabelaPorFornecedor({});
+        }
+      } else {
+        setTabelaPorFornecedor({});
+      }
+
+      atualizarBoletaAtual({ clienteSelecionadoId: "", pagamentoConfirmado: false });
+      setCarregando(false);
+    };
+
+    buscarEntidades();
+  }, [tipoNota, carregandoCache]);
 
   // ================================
   // Gerenciamento de abas
@@ -292,6 +414,9 @@ export function Boleta() {
 
       limparBoleta();
       atualizarBoletaAtual({ pagamentoConfirmado: true });
+      if (boletas.length === 1) {
+        try { await api.delete("/boletas/rascunho"); } catch {}
+      }
     } catch (erro) {
       console.error("Detalhe do erro:", erro.response?.data || erro.message);
       alert("Erro ao confirmar pagamento.");

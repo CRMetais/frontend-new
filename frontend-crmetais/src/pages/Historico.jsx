@@ -161,12 +161,13 @@ export function Historico() {
 
     const formatarData = (data) => {
 
-        if (!data) return "-";
+    if (!data) return "-";
 
-        return new Date(data)
-            .toLocaleDateString("pt-BR");
+    const [ano, mes, dia] = data.split("-");
 
-    };
+    return `${dia}/${mes}/${ano}`;
+
+};
 
     const columns = [
 
