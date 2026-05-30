@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import { FaTrashAlt, FaPlus, FaTimes } from "react-icons/fa";
 import api from "../services/apiClient";
 import "../styles/Boleta.css";
+import Select from "react-select";
 
 let contadorBoleta = 1;
 
@@ -11,7 +12,7 @@ const criarBoletaVazia = () => ({
   itensBoleta: [],
   clienteSelecionadoId: "",
   classeNota: "RETIRADA",
-  tipoNota: "SAÍDA",
+  tipoNota: "ENTRADA",
   pagamentoConfirmado: false,
 });
 
@@ -502,43 +503,49 @@ export function Boleta() {
                           <tr key={item.idLinha}>
                             <td className="text-muted">{index + 1}</td>
                             <td>
-                              <select
-                                className="form-select form-select-sm bg-transparent border-0"
-                                value={item.produtoId}
-                                onChange={(e) =>
-                                  atualizarItem(
-                                    item.idLinha,
-                                    "produtoId",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="">Selecione</option>
-                                {produtos.map((p) => (
-                                  <option
-                                    key={p.id || p.idProduto}
-                                    value={p.id || p.idProduto}
-                                  >
-                                    {p.nome || p.descricao}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
+  <Select
+   menuPortalTarget={document.body}
+   menuPosition="fixed"
+    options={produtos.map((p) => ({
+      value: String(p.id || p.idProduto),
+      label: p.nome || p.descricao,
+    }))}
+    value={
+      item.produtoId
+        ? {
+            value: String(item.produtoId),
+            label: produtos.find(
+              (p) => String(p.id || p.idProduto) === String(item.produtoId)
+            )?.nome || "",
+          }
+        : null
+    }
+    onChange={(opcao) =>
+      atualizarItem(item.idLinha, "produtoId", opcao ? opcao.value : "")
+    }
+    placeholder="Buscar produto..."
+    isClearable
+    classNamePrefix="react-select"
+  />
+</td>
                             <td>
                               <input
-                                type="number"
-                                min="0"
-                                step="0.01"
+                                type="text"
                                 className="form-control form-control-sm bg-transparent border-0"
-                                placeholder="0,00"
+                                placeholder="ex: 120-15"
                                 value={item.peso}
                                 onChange={(e) =>
-                                  atualizarItem(
-                                    item.idLinha,
-                                    "peso",
-                                    e.target.value
-                                  )
+                                  atualizarItem(item.idLinha, "peso", e.target.value)
                                 }
+                                onBlur={(e) => {
+                                  try {
+                                    const expr = e.target.value.replace(/,/g, ".");
+                                    const resultado = Function(`"use strict"; return (${expr})`)();
+                                    if (!isNaN(resultado) && isFinite(resultado)) {
+                                      atualizarItem(item.idLinha, "peso", Number(resultado.toFixed(2)));
+                                    }
+                                  } catch {}
+                                }}
                               />
                             </td>
                             <td className="text-muted small">

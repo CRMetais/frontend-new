@@ -63,9 +63,8 @@ function calcMargem(precoCliente, precoVital) {
 
 function corMargem(margem) {
   if (margem === null) return { bg: "transparent", color: "#aaa" };
-  if (margem > 2)   return { bg: "#dcfce7", color: "#15803d" };
-  if (margem > 1)   return { bg: "#fef9c3", color: "#a16207" };
-  if (margem > 0.5) return { bg: "#ffedd5", color: "#c2410c" };
+  if (margem > 0)  return { bg: "#dcfce7", color: "#15803d" };
+  if (margem === 0) return { bg: "#fef9c3", color: "#a18a07" };
   return              { bg: "#fee2e2", color: "#b91c1c" };
 }
 
