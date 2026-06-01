@@ -18,7 +18,7 @@ jobs:
           node-version: '20'
 
       - name: Build
-        working-directory: ./front-end-cr-metais
+        working-directory: ./frontend-crmetais
         run: |
           npm install
           npm run build
