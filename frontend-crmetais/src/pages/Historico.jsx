@@ -5,7 +5,7 @@ import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisa } from '../components/Inputs';
 import { BotaoCsv, BotaoAlternarHistorico } from "../components/Buttons";
 
-import { buscarHistorico } from "../services/HistoricoService";
+import { buscarHistorico } from "../services/HIstoricoService";
 import { isUsuarioComum } from "../services/UsuarioService";
 
 import "../styles/Historico.css"

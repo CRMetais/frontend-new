@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 
 import { BarChart } from "@mui/x-charts";
 
-import api from "../services/apiClient";
+import api from "../services/ApiClient";
 import { isUsuarioComum } from "../services/UsuarioService";
 
 import "../styles/Dashboard.css"

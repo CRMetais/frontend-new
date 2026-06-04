@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { isUsuarioComum } from "../services/usuarioService";
+import { isUsuarioComum } from "../services/UsuarioService";
 import {
   fetchPrecosPorTabela,
   fetchNomesTabelasVenda,

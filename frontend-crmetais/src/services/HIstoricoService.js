@@ -1,4 +1,4 @@
-import api from "./apiClient";
+import api from "./ApiClient";
 
 export const buscarHistorico = async (tipo, pagina = 0, tamanho = 10) => {
   try {

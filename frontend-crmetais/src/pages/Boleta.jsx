@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { FaTrashAlt, FaPlus, FaTimes } from "react-icons/fa";
-import api from "../services/apiClient";
+import api from "../services/ApiClient";
 import "../styles/Boleta.css";
 import Select from "react-select";
 

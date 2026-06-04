@@ -5,8 +5,8 @@ import {
   buscarUsuarioPorId,
   getUsuarioLogadoId,
   salvarUsuarioLogado,
-} from "../services/usuarioService";
-import api from "../services/apiClient";
+} from "../services/UsuarioService";
+import api from "../services/ApiClient";
 
 const SENHA_FORTE_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

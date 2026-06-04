@@ -1,7 +1,7 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import api from "./apiClient";
-import { API_URL } from "./apiClient";
+import api from "./ApiClient";
+import { API_URL } from "./ApiClient";
 
 // ─── Utilitários internos ──────────────────────────────────────────────────────
 

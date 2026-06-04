@@ -9,7 +9,7 @@ import {
   FaTag,
   FaUser,
 } from "react-icons/fa";
-import { buscarClientePorId } from "../services/clienteService";
+import { buscarClientePorId } from "../services/ClienteService";
 
 export default function DetalhesClienteModal({ show, onClose, clienteId }) {
   const [cliente, setCliente] = useState(null);

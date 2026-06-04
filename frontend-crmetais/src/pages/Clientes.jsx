@@ -4,7 +4,7 @@ import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisaCliente } from "../components/Inputs";
 import DetalheClienteModal from "../components/DetalhesClienteModal";
 import NovoClienteModal from "../components/NovoClienteModal";
-import { listarClientes, deletarCliente } from "../services/clienteService";
+import { listarClientes, deletarCliente } from "../services/ClienteService";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import "../styles/Cliente.css"
 

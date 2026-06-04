@@ -1,4 +1,4 @@
-import api from "./apiClient";
+import api from "./ApiClient";
 
 // ─── COMPARTILHADO ───────────────────────────────────────────────────────────
 

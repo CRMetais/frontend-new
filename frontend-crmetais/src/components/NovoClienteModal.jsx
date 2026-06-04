@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "../services/apiClient";
-import { buscarClientePorId, cadastrarCliente, atualizarCliente } from "../services/clienteService";
+import api from "../services/ApiClient";
+import { buscarClientePorId, cadastrarCliente, atualizarCliente } from "../services/ClienteService";
 import { cadastrarEndereco, atualizarEndereco } from "../services/EnderecoService";
 
 const DADOS_INICIAIS = {

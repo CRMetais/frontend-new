@@ -1,4 +1,4 @@
-import { API_URL } from "./apiClient";
+import { API_URL } from "./ApiClient";
 
 // Utilitário interno: lança erro com a mensagem real do backend
 async function lancarErro(res, mensagemPadrao) {

@@ -1,4 +1,4 @@
-import { API_URL } from "./apiClient";
+import { API_URL } from "./ApiClient";
 
 // ================================
 // CADASTRAR ENDEREÇO

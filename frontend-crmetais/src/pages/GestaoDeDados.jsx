@@ -8,7 +8,7 @@ import {
   excluirUsuario,
   getUsuarioLogadoId,
   isUsuarioComum,
-} from "../services/usuarioService";
+} from "../services/UsuarioService";
 
 import "../styles/GestaoDeDados.css";
 
