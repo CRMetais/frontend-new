@@ -31,4 +31,4 @@ jobs:
           REMOTE_USER: ubuntu
           TARGET: /home/ubuntu/frontend
           ARGS: "-rltgoDzvO --delete" 
-          SOURCE: "./front-end-cr-metais/dist/"
+          SOURCE: "frontend-crmetais/dist/"
