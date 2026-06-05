@@ -3,9 +3,9 @@ import Navbar from '../components/Navbar';
 // import { TabelaHistorico } from "../components/TabelaGenerica";
 import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisa } from '../components/Inputs';
-import { BotaoCsv, BotaoAlternarHistorico } from "../components/Buttons";
+import { BotaoXml, BotaoAlternarHistorico } from "../components/Buttons";
 
-import { buscarHistorico } from "../services/HIstoricoService";
+import { buscarHistorico, baixarHistoricoXmlLocal } from "../services/HIstoricoService";
 import { isUsuarioComum } from "../services/UsuarioService";
 
 import "../styles/Historico.css"
@@ -20,6 +20,9 @@ export function Historico() {
     const [pagina, setPagina] = useState(0);
     const [temMais, setTemMais] = useState(true);
     const [busca, setBusca] = useState("");
+    const [mostrarModal, setMostrarModal] = useState(false);
+    const [dataInicio, setDataInicio] = useState("");
+    const [dataFim, setDataFim] = useState("");
 
     const observer = useRef(null);
     const loadingRef = useRef(false);
@@ -89,6 +92,17 @@ export function Historico() {
         }
 
     }, [tipoHistorico]);
+
+    const handleBaixarXml = async () => {
+    try {
+        const tipoApi = tipoHistorico === "Entrada" ? "COMPRA" : "VENDA";
+        await baixarHistoricoXmlLocal(tipoApi, dataInicio, dataFim);
+        setMostrarModal(false);
+    } catch (error) {
+        console.error("Erro ao gerar XML:", error);
+        alert("Não foi possível gerar o XML. Tente novamente.");
+    }
+};
 
     const lastElementRef = useCallback(node => {
 
@@ -257,6 +271,7 @@ export function Historico() {
 
     ];
 
+
     return (
         <div className='conteudo pb-3'>
             <Navbar />
@@ -281,8 +296,8 @@ export function Historico() {
                 </div>
 
                 <div className="container-botoes-historico d-flex flex-column flex-lg-row gap-2 justify-content-lg-end flex-shrink-0">
-                    <BotaoCsv
-                        onClick={() => console.log("CSV")}
+                    <BotaoXml
+                        onClick={() => setMostrarModal(true)}
                     />
 
                     <BotaoAlternarHistorico
@@ -340,10 +355,38 @@ export function Historico() {
 
                         )}
 
+                        {mostrarModal && (
+                            <div className="modal-overlay">
+                                <div className="modal-calendario">
+                                    <h2>Selecionar período</h2>
+
+                                    <div>
+                                        <p>Data inicial</p>
+                                        <input
+                                            type="date"
+                                            value={dataInicio}
+                                            onChange={(e) => setDataInicio(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <p>Data final</p>
+                                        <input
+                                            type="date"
+                                            value={dataFim}
+                                            onChange={(e) => setDataFim(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <button onClick={() => setMostrarModal(false)}>Cancelar</button>
+                                        <button onClick={handleBaixarXml}>Confirmar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-
                 </div>
-
             </div>
         </div>
     )

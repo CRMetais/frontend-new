@@ -27,13 +27,13 @@ export function BotaoDeslogar() {
     )
 }
 
-export function BotaoCsv({ onClick }) {
+export function BotaoXml({ onClick }) {
     return (
         <button
             className="btn btn-success btn-mobile-full shadow-sm"
             onClick={onClick}
         >
-            Baixar CSV
+            Baixar XML
         </button>
     );
 }
