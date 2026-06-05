@@ -72,7 +72,7 @@ export async function baixarHistoricoXmlLocal(tipo, dataInicio, dataFim) {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "historico.xml";
+    a.download = `historico_${dataInicio.replaceAll("-", "")}_${dataFim.replaceAll("-", "")}.xml`;
     a.click();
 
     window.URL.revokeObjectURL(url);
