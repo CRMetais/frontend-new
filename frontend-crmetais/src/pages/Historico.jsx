@@ -5,7 +5,7 @@ import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisa } from '../components/Inputs';
 import { BotaoXml, BotaoAlternarHistorico } from "../components/Buttons";
 
-import { buscarHistorico, baixarHistoricoXmlLocal } from "../services/HIstoricoService";
+import { buscarHistorico, baixarHistoricoXmlLocal, baixarHistoricoXml } from "../services/HIstoricoService";
 import { isUsuarioComum } from "../services/UsuarioService";
 
 import "../styles/Historico.css"
@@ -94,15 +94,22 @@ export function Historico() {
     }, [tipoHistorico]);
 
     const handleBaixarXml = async () => {
-    try {
-        const tipoApi = tipoHistorico === "Entrada" ? "COMPRA" : "VENDA";
-        await baixarHistoricoXmlLocal(tipoApi, dataInicio, dataFim);
-        setMostrarModal(false);
-    } catch (error) {
-        console.error("Erro ao gerar XML:", error);
-        alert("Não foi possível gerar o XML. Tente novamente.");
-    }
-};
+        try {
+            const tipoApi = tipoHistorico === "Entrada" ? "COMPRA" : "VENDA";
+            
+            // lambda
+            const url = await baixarHistoricoXml(tipoApi, dataInicio, dataFim);
+            window.open(url, "_blank");
+
+            // local
+            // await baixarHistoricoXmlLocal(tipoApi, dataInicio, dataFim);
+            
+            setMostrarModal(false);
+        } catch (error) {
+            console.error("Erro ao gerar XML:", error);
+            alert("Não foi possível gerar o XML. Tente novamente.");
+        }
+    };
 
     const lastElementRef = useCallback(node => {
 

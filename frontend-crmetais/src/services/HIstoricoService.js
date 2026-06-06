@@ -41,7 +41,7 @@ export const buscarHistorico = async (tipo, pagina = 0, tamanho = 10) => {
 
 export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
   try {
-    const lambdaUrl = import.meta.env.VITE_LAMBDA_XML_URL; // nova env var
+    const lambdaUrl = import.meta.env.VITE_LAMBDA_XML_URL;
     const url = `${lambdaUrl}?tipo=${tipo}&dataInicio=${dataInicio}&dataFim=${dataFim}`;
 
     const response = await fetch(url, { method: "GET" });
