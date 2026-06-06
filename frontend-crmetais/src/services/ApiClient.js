@@ -6,6 +6,7 @@ const api = axios.create({
   baseURL: API_URL
 });
 
+// Interceptor de requisição - adiciona token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
@@ -18,5 +19,18 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+// Interceptor de resposta - desloga automaticamente se token expirar
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

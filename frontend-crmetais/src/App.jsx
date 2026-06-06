@@ -9,6 +9,7 @@ import { Boleta } from './pages/Boleta';
 import { GestaoDeDados } from './pages/GestaoDeDados';
 import { Dashboard } from './pages/Dashboard';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
 
@@ -18,16 +19,44 @@ function App() {
       <div className='conteudo vh-100 d-flex flex-column'>
 
         <Routes>
+
+          {/* Rotas públicas */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/resumo" element={<Resumo />} />
-          <Route path="/historico" element={<Historico />} />
-          <Route path="/fornecedores" element={<Fornecedores />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/tabelas-preco" element={<TabelasPreco />} />
-          <Route path="/boleta" element={<Boleta />} />
-          <Route path="/gestao-de-dados" element={<GestaoDeDados />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Rotas protegidas */}
+          <Route path="/resumo" element={
+            <PrivateRoute><Resumo /></PrivateRoute>
+          } />
+
+          <Route path="/historico" element={
+            <PrivateRoute><Historico /></PrivateRoute>
+          } />
+
+          <Route path="/fornecedores" element={
+            <PrivateRoute><Fornecedores /></PrivateRoute>
+          } />
+
+          <Route path="/clientes" element={
+            <PrivateRoute><Clientes /></PrivateRoute>
+          } />
+
+          <Route path="/tabelas-preco" element={
+            <PrivateRoute><TabelasPreco /></PrivateRoute>
+          } />
+
+          <Route path="/boleta" element={
+            <PrivateRoute><Boleta /></PrivateRoute>
+          } />
+
+          <Route path="/gestao-de-dados" element={
+            <PrivateRoute><GestaoDeDados /></PrivateRoute>
+          } />
+
+          <Route path="/dashboard" element={
+            <PrivateRoute><Dashboard /></PrivateRoute>
+          } />
+
         </Routes>
 
       </div>
@@ -36,4 +65,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
