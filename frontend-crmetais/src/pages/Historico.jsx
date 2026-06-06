@@ -363,35 +363,75 @@ export function Historico() {
                         )}
 
                         {mostrarModal && (
-                            <div className="modal-overlay">
-                                <div className="modal-calendario">
-                                    <h2>Selecionar período</h2>
+    <div
+        className="modal fade show d-block"
+        tabIndex="-1"
+        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        onClick={() => setMostrarModal(false)}
+    >
+        <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className="modal-content">
 
-                                    <div>
-                                        <p>Data inicial</p>
-                                        <input
-                                            type="date"
-                                            value={dataInicio}
-                                            onChange={(e) => setDataInicio(e.target.value)}
-                                        />
-                                    </div>
+                <div className="modal-header">
+                    <h5 className="modal-title fw-bold">
+                        Selecionar período
+                    </h5>
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setMostrarModal(false)}
+                    />
+                </div>
 
-                                    <div>
-                                        <p>Data final</p>
-                                        <input
-                                            type="date"
-                                            value={dataFim}
-                                            onChange={(e) => setDataFim(e.target.value)}
-                                        />
-                                    </div>
+                <div className="modal-body px-4 py-3">
+                    <div className="row g-3">
+                        <div className="col-md-6">
+                            <label className="form-label fw-semibold small text-secondary mb-1">
+                                Data inicial
+                            </label>
+                            <input
+                                type="date"
+                                className="form-control"
+                                value={dataInicio}
+                                onChange={(e) => setDataInicio(e.target.value)}
+                            />
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label fw-semibold small text-secondary mb-1">
+                                Data final
+                            </label>
+                            <input
+                                type="date"
+                                className="form-control"
+                                value={dataFim}
+                                onChange={(e) => setDataFim(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                                    <div>
-                                        <button onClick={() => setMostrarModal(false)}>Cancelar</button>
-                                        <button onClick={handleBaixarXml}>Confirmar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                <div className="modal-footer">
+                    <button
+                        className="btn btn-outline-secondary"
+                        onClick={() => setMostrarModal(false)}
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        onClick={handleBaixarXml}
+                    >
+                        Confirmar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+)}
                     </div>
                 </div>
             </div>
