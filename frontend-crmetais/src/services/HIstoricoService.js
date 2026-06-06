@@ -48,17 +48,7 @@ export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
     if (!responseLambda.ok) throw new Error("Erro ao chamar Lambda");
 
     const presignedUrl = await responseLambda.text();
-
-    const responseXml = await fetch(presignedUrl);
-    const xmlBlob = await responseXml.blob();
-
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(xmlBlob);
-    a.download = `historico-${tipo}-${dataInicio}-a-${dataFim}.xml`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    window.location.href = presignedUrl;
 
   } catch (error) {
     console.error("Erro ao baixar XML:", error);
