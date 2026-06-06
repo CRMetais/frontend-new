@@ -44,16 +44,19 @@ export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
     const lambdaUrl = import.meta.env.VITE_LAMBDA_XML_URL;
     const url = `${lambdaUrl}?tipo=${tipo}&dataInicio=${dataInicio}&dataFim=${dataFim}`;
 
-    const response = await fetch(url, { method: "GET" });
+    const responseLambda = await fetch(url, { method: "GET" });
+    if (!responseLambda.ok) throw new Error("Erro ao chamar Lambda");
 
-    if (!response.ok) throw new Error("Erro ao chamar Lambda");
+    const presignedUrl = await responseLambda.text();
 
-    const urlDownload = await response.text();
+    const responseXml = await fetch(presignedUrl);
+    const xmlBlob = await responseXml.blob();
 
     const a = document.createElement("a");
-    a.href = urlDownload;
+    a.href = URL.createObjectURL(xmlBlob);
     a.download = `historico-${tipo}-${dataInicio}-a-${dataFim}.xml`;
     a.click();
+    URL.revokeObjectURL(a.href);
 
   } catch (error) {
     console.error("Erro ao baixar XML:", error);
