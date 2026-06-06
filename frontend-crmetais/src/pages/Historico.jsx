@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
-// import { TabelaHistorico } from "../components/TabelaGenerica";
 import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisa } from '../components/Inputs';
 import { BotaoXml, BotaoAlternarHistorico } from "../components/Buttons";
@@ -23,6 +22,7 @@ export function Historico() {
     const [mostrarModal, setMostrarModal] = useState(false);
     const [dataInicio, setDataInicio] = useState("");
     const [dataFim, setDataFim] = useState("");
+    const [erroData, setErroData] = useState("");
 
     const observer = useRef(null);
     const loadingRef = useRef(false);
@@ -93,21 +93,33 @@ export function Historico() {
 
     }, [tipoHistorico]);
 
+    const fecharModal = () => {
+        setMostrarModal(false);
+        setErroData("");
+    };
+
     const handleBaixarXml = async () => {
+        if (!dataInicio || !dataFim) {
+            setErroData("Selecione um período de tempo.");
+            return;
+        }
+
+        setErroData("");
+
         try {
             const tipoApi = tipoHistorico === "Entrada" ? "COMPRA" : "VENDA";
-            
+
             // lambda
             const url = await baixarHistoricoXml(tipoApi, dataInicio, dataFim);
             window.open(url, "_blank");
 
             // local
             // await baixarHistoricoXmlLocal(tipoApi, dataInicio, dataFim);
-            
+
             setMostrarModal(false);
         } catch (error) {
             console.error("Erro ao gerar XML:", error);
-            alert("Não foi possível gerar o XML. Tente novamente.");
+            setErroData("Não foi possível gerar o XML. Tente novamente.");
         }
     };
 
@@ -138,8 +150,6 @@ export function Historico() {
         }
 
     }, [temMais, pagina, carregarDados]);
-
-
 
     useEffect(() => {
 
@@ -182,13 +192,13 @@ export function Historico() {
 
     const formatarData = (data) => {
 
-    if (!data) return "-";
+        if (!data) return "-";
 
-    const [ano, mes, dia] = data.split("-");
+        const [ano, mes, dia] = data.split("-");
 
-    return `${dia}/${mes}/${ano}`;
+        return `${dia}/${mes}/${ano}`;
 
-};
+    };
 
     const columns = [
 
@@ -278,7 +288,6 @@ export function Historico() {
 
     ];
 
-
     return (
         <div className='conteudo pb-3'>
             <Navbar />
@@ -322,7 +331,6 @@ export function Historico() {
 
             </div>
 
-
             <div className="tabela container-historico ms-4 me-4 g-3">
 
                 <InputPesquisa
@@ -353,88 +361,94 @@ export function Historico() {
                         />
 
                         {loading && (
-
                             <div className="text-center py-3">
-
                                 {/* Carregando... */}
-
                             </div>
-
                         )}
 
-                        {mostrarModal && (
-    <div
-        className="modal fade show d-block"
-        tabIndex="-1"
-        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        onClick={() => setMostrarModal(false)}
-    >
-        <div
-            className="modal-dialog modal-dialog-centered"
-            onClick={(e) => e.stopPropagation()}
-        >
-            <div className="modal-content">
-
-                <div className="modal-header">
-                    <h5 className="modal-title fw-bold">
-                        Selecionar período
-                    </h5>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setMostrarModal(false)}
-                    />
-                </div>
-
-                <div className="modal-body px-4 py-3">
-                    <div className="row g-3">
-                        <div className="col-md-6">
-                            <label className="form-label fw-semibold small text-secondary mb-1">
-                                Data inicial
-                            </label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={dataInicio}
-                                onChange={(e) => setDataInicio(e.target.value)}
-                            />
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label fw-semibold small text-secondary mb-1">
-                                Data final
-                            </label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={dataFim}
-                                onChange={(e) => setDataFim(e.target.value)}
-                            />
-                        </div>
                     </div>
-                </div>
 
-                <div className="modal-footer">
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setMostrarModal(false)}
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleBaixarXml}
-                    >
-                        Confirmar
-                    </button>
                 </div>
 
             </div>
-        </div>
-    </div>
-)}
+
+            {mostrarModal && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                    onClick={fecharModal}
+                >
+                    <div
+                        className="modal-dialog modal-dialog-centered"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-content">
+
+                            <div className="modal-header">
+                                <h5 className="modal-title fw-bold">
+                                    Selecionar período
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={fecharModal}
+                                />
+                            </div>
+
+                            <div className="modal-body px-4 py-3">
+                                <div className="row g-3">
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-semibold small text-secondary mb-1">
+                                            Data inicial
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={dataInicio}
+                                            onChange={(e) => setDataInicio(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-semibold small text-secondary mb-1">
+                                            Data final
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={dataFim}
+                                            onChange={(e) => setDataFim(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {erroData && (
+                                    <div className="text-danger small mt-2">
+                                        {erroData}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="modal-footer">
+                                <button
+                                    className="btn btn-outline-secondary"
+                                    onClick={fecharModal}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleBaixarXml}
+                                >
+                                    Confirmar
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
         </div>
     )
 }
