@@ -4,8 +4,6 @@ import {
   FaPhone,
   FaIdCard,
   FaMapMarkerAlt,
-  FaUniversity,
-  FaCreditCard,
   FaTag,
   FaUser,
 } from "react-icons/fa";
@@ -129,38 +127,6 @@ export default function DetalhesClienteModal({ show, onClose, clienteId }) {
                     icon={<FaMapMarkerAlt />}
                     titulo="Estado"
                     valor={cliente.endereco?.estado}
-                  />
-                </div>
-
-                <hr />
-
-                {/* FINANCEIRO */}
-                <h5 className="mb-3">Financeiro</h5>
-                <div className="row g-3">
-                  <Campo
-                    icon={<FaCreditCard />}
-                    titulo="Pagamento"
-                    valor={cliente.tipoPagamento}
-                  />
-                  <Campo
-                    icon={<FaUniversity />}
-                    titulo="Banco"
-                    valor={cliente.banco}
-                  />
-                  <Campo
-                    icon={<FaUniversity />}
-                    titulo="Agência"
-                    valor={cliente.agencia}
-                  />
-                  <Campo
-                    icon={<FaUniversity />}
-                    titulo="Conta"
-                    valor={cliente.conta}
-                  />
-                  <Campo
-                    icon={<FaUniversity />}
-                    titulo="PIX"
-                    valor={cliente.chavePix}
                   />
                 </div>
               </>
