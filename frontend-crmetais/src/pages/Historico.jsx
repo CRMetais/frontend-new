@@ -386,8 +386,8 @@ export function Historico() {
                                     </div>
 
                                     <div>
-                                        <button onClick={() => setMostrarModal(false)}>Cancelar</button>
-                                        <button onClick={handleBaixarXml}>Confirmar</button>
+                                        <button onClick={() => setMostrarModal(false)}>Cancelar!</button>
+                                        <button onClick={handleBaixarXml}>Confirmar!</button>
                                     </div>
                                 </div>
                             </div>
