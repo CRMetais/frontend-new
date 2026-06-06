@@ -1,11 +1,42 @@
 import React, { useCallback, useEffect, useState } from "react";
+import BoletasConfirmadasModal from "../components/BoletasConfirmadasModal";
+import FeedbackModal from "../components/FeedbackModal";
 import Navbar from "../components/Navbar";
 import { FaTrashAlt, FaPlus, FaTimes } from "react-icons/fa";
 import api from "../services/ApiClient";
 import "../styles/Boleta.css";
 import Select from "react-select";
+import {
+  construirTextoNotaPagamento,
+  copiarTextoParaClipboard,
+} from "../utils/boletaClipboard";
 
 let contadorBoleta = 1;
+const BOLETAS_CONFIRMADAS_STORAGE_KEY = "boletas_confirmadas_24h";
+const JANELA_ULTIMAS_24H_MS = 24 * 60 * 60 * 1000;
+
+const filtrarBoletasUltimas24Horas = (boletas, agora = Date.now()) =>
+  (Array.isArray(boletas) ? boletas : []).filter((boleta) => {
+    const confirmadoEm = new Date(boleta?.confirmadoEm).getTime();
+
+    return (
+      Number.isFinite(confirmadoEm) &&
+      agora - confirmadoEm <= JANELA_ULTIMAS_24H_MS &&
+      confirmadoEm <= agora
+    );
+  });
+
+const carregarBoletasConfirmadas = () => {
+  try {
+    const armazenado = localStorage.getItem(BOLETAS_CONFIRMADAS_STORAGE_KEY);
+    if (!armazenado) return [];
+
+    return filtrarBoletasUltimas24Horas(JSON.parse(armazenado));
+  } catch (error) {
+    console.error("Falha ao carregar boletas confirmadas", error);
+    return [];
+  }
+};
 
 const criarBoletaVazia = () => ({
   id: contadorBoleta++,
@@ -19,6 +50,7 @@ const criarBoletaVazia = () => ({
 export function Boleta() {
   const [boletas, setBoletas] = useState([criarBoletaVazia()]);
   const [abaAtiva, setAbaAtiva] = useState(1);
+  const [boletaPendenteExclusao, setBoletaPendenteExclusao] = useState(null);
 
   const [clientes, setClientes] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -27,6 +59,16 @@ export function Boleta() {
 
   const [carregando, setCarregando] = useState(false);
   const [salvandoNota, setSalvandoNota] = useState(false);
+  const [modalHistoricoAberto, setModalHistoricoAberto] = useState(false);
+  const [feedbackModal, setFeedbackModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    variant: "info",
+  });
+  const [boletasConfirmadas, setBoletasConfirmadas] = useState(() =>
+    carregarBoletasConfirmadas()
+  );
 
   const [carregandoCache, setCarregandoCache] = useState(
     () => !localStorage.getItem("boletas_rascunho")
@@ -62,6 +104,39 @@ export function Boleta() {
       style: "currency",
       currency: "BRL",
     }).format(valor || 0);
+
+  const abrirFeedbackModal = useCallback((message, variant = "info", title = "") => {
+    setFeedbackModal({
+      show: true,
+      title,
+      message,
+      variant,
+    });
+  }, []);
+
+  const fecharFeedbackModal = useCallback(() => {
+    setFeedbackModal((estadoAtual) => ({
+      ...estadoAtual,
+      show: false,
+    }));
+  }, []);
+
+  useEffect(() => {
+    const historicoAtualizado = filtrarBoletasUltimas24Horas(boletasConfirmadas);
+
+    try {
+      localStorage.setItem(
+        BOLETAS_CONFIRMADAS_STORAGE_KEY,
+        JSON.stringify(historicoAtualizado)
+      );
+    } catch (error) {
+      console.error("Falha ao salvar boletas confirmadas", error);
+    }
+
+    if (historicoAtualizado.length !== boletasConfirmadas.length) {
+      setBoletasConfirmadas(historicoAtualizado);
+    }
+  }, [boletasConfirmadas]);
 
   // ================================
   // Carregar produtos e preços
@@ -292,6 +367,44 @@ export function Boleta() {
     });
   };
 
+  const solicitarExclusaoBoleta = useCallback((boleta) => {
+    setBoletaPendenteExclusao(boleta);
+  }, []);
+
+  const cancelarExclusaoBoleta = useCallback(() => {
+    setBoletaPendenteExclusao(null);
+  }, []);
+
+  const confirmarExclusaoBoleta = useCallback(() => {
+    if (!boletaPendenteExclusao) return;
+
+    removerBoleta(boletaPendenteExclusao.id);
+    setBoletaPendenteExclusao(null);
+  }, [boletaPendenteExclusao]);
+
+  const finalizarBoletaConfirmada = useCallback((idBoleta) => {
+    setBoletas((prev) => {
+      if (prev.length <= 1) {
+        const boletaAnterior = prev[0] || criarBoletaVazia();
+        const novaBoleta = {
+          ...criarBoletaVazia(),
+          tipoNota: boletaAnterior.tipoNota || "ENTRADA",
+          classeNota: boletaAnterior.classeNota || "RETIRADA",
+        };
+
+        setAbaAtiva(novaBoleta.id);
+        return [novaBoleta];
+      }
+
+      const restantes = prev.filter((boleta) => boleta.id !== idBoleta);
+      if (restantes.length > 0) {
+        setAbaAtiva(restantes[restantes.length - 1].id);
+      }
+
+      return restantes;
+    });
+  }, []);
+
   // ================================
   // Ações da boleta ativa
   // ================================
@@ -356,6 +469,72 @@ export function Boleta() {
     { total: 0, peso: 0, bags: 0 }
   );
 
+  const salvarBoletaConfirmadaNoHistorico = useCallback(
+    ({ idEntidade, referenciaId }) => {
+      const entidadeSelecionada = clientes.find(
+        (cliente) =>
+          String(cliente.id || cliente.idCliente || cliente.idFornecedor) ===
+          String(clienteSelecionadoId)
+      );
+
+      const itensSnapshot = itensBoleta
+        .filter((item) => item.produtoId && Number(item.peso) > 0)
+        .map((item) => ({
+          ...item,
+          peso: Number(item.peso || 0),
+          bags: Number(item.bags || 0),
+          valorUnitario: Number(item.valorUnitario || 0),
+          total: Number(item.total || 0),
+          nomeProduto:
+            produtos.find(
+              (produto) =>
+                String(produto.id || produto.idProduto) ===
+                String(item.produtoId)
+            )?.nome ||
+            produtos.find(
+              (produto) =>
+                String(produto.id || produto.idProduto) ===
+                String(item.produtoId)
+            )?.descricao ||
+            "-",
+        }));
+
+      const novaBoletaConfirmada = {
+        idHistorico: `${Date.now()}_${boletaAtual.id}`,
+        boletaId: boletaAtual.id,
+        confirmadoEm: new Date().toISOString(),
+        referenciaId,
+        idEntidade,
+        tipoEntidade: tipoNota === "ENTRADA" ? "Fornecedor" : "Cliente",
+        nomeEntidade:
+          entidadeSelecionada?.nome || entidadeSelecionada?.razaoSocial || "-",
+        clienteSelecionadoId,
+        classeNota,
+        tipoNota,
+        resumo: {
+          total: itensSnapshot.reduce(
+            (acumulado, item) => acumulado + Number(item.total || 0),
+            0
+          ),
+          peso: itensSnapshot.reduce(
+            (acumulado, item) => acumulado + Number(item.peso || 0),
+            0
+          ),
+          bags: itensSnapshot.reduce(
+            (acumulado, item) => acumulado + Number(item.bags || 0),
+            0
+          ),
+        },
+        itensBoleta: itensSnapshot,
+      };
+
+      setBoletasConfirmadas((prev) =>
+        filtrarBoletasUltimas24Horas([novaBoletaConfirmada, ...prev])
+      );
+    },
+    [boletaAtual.id, classeNota, clienteSelecionadoId, clientes, itensBoleta, produtos, tipoNota]
+  );
+
   // ================================
   // Confirmar pagamento
   // ================================
@@ -365,13 +544,22 @@ export function Boleta() {
     );
 
     if (!clienteSelecionadoId)
-      return alert("Selecione um cliente/fornecedor.");
+      return abrirFeedbackModal(
+        "Selecione um cliente ou fornecedor antes de confirmar o pagamento.",
+        "warning",
+        "Entidade obrigatoria"
+      );
     if (itensValidos.length === 0)
-      return alert("Adicione produtos com peso válido.");
+      return abrirFeedbackModal(
+        "Adicione ao menos um produto com peso valido para continuar.",
+        "warning",
+        "Itens incompletos"
+      );
 
     setSalvandoNota(true);
     const dataAtual = new Date().toISOString().slice(0, 10);
     const idEntidade = Number(clienteSelecionadoId);
+    let referenciaId = null;
 
     try {
       if (tipoNota === "ENTRADA") {
@@ -389,6 +577,7 @@ export function Boleta() {
         });
 
         const idCompra = resCompra.data.idCompra || resCompra.data.id;
+        referenciaId = idCompra;
         await api.post("/pagamento-compra", {
           dataPagamento: dataAtual,
           idCompra: Number(idCompra),
@@ -401,6 +590,7 @@ export function Boleta() {
         });
 
         const idVenda = resVenda.data.idVenda || resVenda.data.id;
+        referenciaId = idVenda;
 
         for (const item of itensValidos) {
           await api.post("/itens-pedido-venda", {
@@ -412,14 +602,26 @@ export function Boleta() {
         }
       }
 
-      limparBoleta();
-      atualizarBoletaAtual({ pagamentoConfirmado: true });
-      if (boletas.length === 1) {
-        try { await api.delete("/boletas/rascunho"); } catch {}
-      }
+      salvarBoletaConfirmadaNoHistorico({ idEntidade, referenciaId });
+      finalizarBoletaConfirmada(boletaAtual.id);
+
+      try {
+        if (boletas.length === 1) {
+          await api.delete("/boletas/rascunho");
+        } else {
+          await api.post(
+            "/boletas/rascunho",
+            boletas.filter((boleta) => boleta.id !== boletaAtual.id)
+          );
+        }
+      } catch {}
     } catch (erro) {
       console.error("Detalhe do erro:", erro.response?.data || erro.message);
-      alert("Erro ao confirmar pagamento.");
+      abrirFeedbackModal(
+        "Nao foi possivel confirmar o pagamento desta boleta.",
+        "error",
+        "Falha ao salvar"
+      );
     } finally {
       setSalvandoNota(false);
     }
@@ -431,11 +633,19 @@ export function Boleta() {
   const gerarNotaFiscal = async () => {
     try {
       if (!clienteSelecionadoId) {
-        alert("Selecione um cliente/fornecedor.");
+        abrirFeedbackModal(
+          "Selecione um cliente ou fornecedor antes de gerar a nota fiscal.",
+          "warning",
+          "Entidade obrigatoria"
+        );
         return;
       }
       if (itensBoleta.length === 0) {
-        alert("Adicione itens na boleta.");
+        abrirFeedbackModal(
+          "Adicione itens na boleta antes de gerar a nota fiscal.",
+          "warning",
+          "Boleta vazia"
+        );
         return;
       }
 
@@ -460,10 +670,78 @@ export function Boleta() {
         body: JSON.stringify(resJava.data),
       });
 
-      alert("NF gerada! Veja o terminal do Python");
+      abrirFeedbackModal(
+        "A nota fiscal foi gerada. Confira o terminal do Python para acompanhar o processamento.",
+        "success",
+        "NF gerada"
+      );
     } catch (erro) {
       console.error("Erro ao gerar NF:", erro);
-      alert("Erro ao gerar nota fiscal");
+      abrirFeedbackModal(
+        "Nao foi possivel gerar a nota fiscal com os dados atuais.",
+        "error",
+        "Falha ao gerar NF"
+      );
+    }
+  };
+
+  const copiarNota = async () => {
+    if (!clienteSelecionadoId) {
+      abrirFeedbackModal(
+        "Selecione um cliente ou fornecedor antes de copiar a nota.",
+        "warning",
+        "Entidade obrigatoria"
+      );
+      return;
+    }
+
+    const itensValidos = itensBoleta
+      .filter((item) => item.produtoId && Number(item.peso) > 0)
+      .map((item) => {
+        const produto = produtos.find(
+          (produtoAtual) =>
+            String(produtoAtual.id || produtoAtual.idProduto) ===
+            String(item.produtoId)
+        );
+
+        return {
+          nomeProduto: produto?.nome || produto?.descricao || "-",
+          peso: Number(item.peso || 0),
+          valorUnitario: Number(item.valorUnitario || 0),
+          total: Number(item.total || 0),
+          bags: Number(item.bags || 0),
+        };
+      });
+
+    if (itensValidos.length === 0) {
+      abrirFeedbackModal(
+        "Adicione ao menos um produto com peso valido para copiar a nota.",
+        "warning",
+        "Itens incompletos"
+      );
+      return;
+    }
+
+    const nota = construirTextoNotaPagamento({
+      nomeEntidade: nomeCliente,
+      tipoEntidade: tipoNota === "ENTRADA" ? "Fornecedor" : "Cliente",
+      itensBoleta: itensValidos,
+    });
+
+    try {
+      await copiarTextoParaClipboard(nota);
+      abrirFeedbackModal(
+        "A nota foi copiada para a area de transferencia.",
+        "success",
+        "Copia concluida"
+      );
+    } catch (error) {
+      console.error("Erro ao copiar nota:", error);
+      abrirFeedbackModal(
+        "Nao foi possivel copiar a nota para a area de transferencia.",
+        "error",
+        "Falha ao copiar"
+      );
     }
   };
 
@@ -515,9 +793,9 @@ export function Boleta() {
                     className="text-secondary"
                     onClick={(e) => {
                       e.stopPropagation();
-                      removerBoleta(b.id);
+                      solicitarExclusaoBoleta(b);
                     }}
-                    title="Excluir boleta"
+                    title="Fechar boleta"
                   />
                 )}
               </button>
@@ -551,6 +829,14 @@ export function Boleta() {
                   <h5 className="fw-bold mb-0">Nota de Pagamento</h5>
 
                   <div className="d-flex flex-wrap gap-2 align-items-center">
+                    <button
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => setModalHistoricoAberto(true)}
+                      type="button"
+                    >
+                      Confirmadas 24h ({boletasConfirmadas.length})
+                    </button>
+
                     {carregando ? (
                       <span className="text-muted small">Carregando...</span>
                     ) : (
@@ -821,8 +1107,20 @@ export function Boleta() {
                       Gerar Nota Fiscal
                     </button>
 
-                    <button className="btn btn-outline-secondary btn-sm w-100">
+                    <button
+                      className="btn btn-outline-secondary btn-sm w-100"
+                      onClick={copiarNota}
+                      type="button"
+                    >
                       Copiar Nota ⧉
+                    </button>
+
+                    <button
+                      className="btn btn-outline-dark btn-sm w-100"
+                      onClick={() => setModalHistoricoAberto(true)}
+                      type="button"
+                    >
+                      Ver boletas confirmadas
                     </button>
                   </div>
 
@@ -841,6 +1139,59 @@ export function Boleta() {
 
         </div>
       </div>
+
+      <BoletasConfirmadasModal
+        show={modalHistoricoAberto}
+        onClose={() => setModalHistoricoAberto(false)}
+        boletas={boletasConfirmadas}
+      />
+
+      <FeedbackModal
+        show={feedbackModal.show}
+        onClose={fecharFeedbackModal}
+        title={feedbackModal.title}
+        message={feedbackModal.message}
+        variant={feedbackModal.variant}
+      />
+
+      {boletaPendenteExclusao && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={cancelarExclusaoBoleta}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Fechar boleta</h5>
+                <button className="btn-close" onClick={cancelarExclusaoBoleta} />
+              </div>
+
+              <div className="modal-body">
+                <p className="mb-2">
+                  Deseja realmente fechar esta boleta?
+                </p>
+                <div className="text-muted small">
+                  Os dados dessa aba serao removidos do rascunho atual.
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={cancelarExclusaoBoleta}>
+                  Cancelar
+                </button>
+                <button className="btn btn-danger" onClick={confirmarExclusaoBoleta}>
+                  Fechar boleta
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
