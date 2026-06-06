@@ -49,7 +49,11 @@ export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
     if (!response.ok) throw new Error("Erro ao chamar Lambda");
 
     const urlDownload = await response.text();
-    return urlDownload;
+
+    const a = document.createElement("a");
+    a.href = urlDownload;
+    a.download = `historico-${tipo}-${dataInicio}-a-${dataFim}.xml`;
+    a.click();
 
   } catch (error) {
     console.error("Erro ao baixar XML:", error);
