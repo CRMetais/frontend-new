@@ -55,8 +55,9 @@ export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(xmlBlob);
     a.download = `historico-${tipo}-${dataInicio}-a-${dataFim}.xml`;
-    a.target = "_self";
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
 
   } catch (error) {
