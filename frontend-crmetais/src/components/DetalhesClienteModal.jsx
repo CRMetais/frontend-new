@@ -87,6 +87,12 @@ export default function DetalhesClienteModal({ show, onClose, clienteId }) {
                     titulo="Responsável"
                     valor={cliente.responsavel?.nome}
                   />
+
+                  <Campo
+                    icon={<FaIdCard />}
+                    titulo="Inscrição Estadual"
+                    valor={cliente.ie}
+                  />
                   <Campo
                     icon={<FaTag />}
                     titulo="Tabela"

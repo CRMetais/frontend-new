@@ -4,17 +4,18 @@ import { buscarClientePorId, cadastrarCliente, atualizarCliente } from "../servi
 import { cadastrarEndereco, atualizarEndereco } from "../services/EnderecoService";
 
 const DADOS_INICIAIS = {
-    razaoSocial: "",
-    cnpj: "",
-    telefone: "",
-    cep: "",
-    bairro: "",
-    logradouro: "",
-    numero: "",
-    cidade: "",
-    estado: "",
-    idTabelaPreco: "",
-    idUsuario: "",
+  razaoSocial: "",
+  cnpj: "",
+  ie: "",
+  telefone: "",
+  cep: "",
+  bairro: "",
+  logradouro: "",
+  numero: "",
+  cidade: "",
+  estado: "",
+  idTabelaPreco: "",
+  idUsuario: "",
 };
 
 function SectionTitle({ children }) {
@@ -106,6 +107,7 @@ export default function NovoClienteModal({
                     ...DADOS_INICIAIS,
                     razaoSocial: cliente.razaoSocial ?? "",
                     cnpj: cliente.cnpj ?? "",
+                    ie: cliente.ie ?? "",
                     telefone: cliente.telefone ?? "",
                     cep: cliente.endereco?.cep ?? "",
                     logradouro: cliente.endereco?.logradouro ?? "",
@@ -186,6 +188,7 @@ export default function NovoClienteModal({
             const dtoCliente = {
                 razaoSocial: dados.razaoSocial,
                 cnpj: dados.cnpj.replace(/\D/g, ""),
+                ie: dados.ie,
                 telContato: dados.telefone.replace(/\D/g, ""),
                 idEndereco: idEnderecoFinal,
                 idTabelaPreco: dados.idTabelaPreco ? Number(dados.idTabelaPreco) : null,
@@ -238,33 +241,45 @@ export default function NovoClienteModal({
                         {/* IDENTIFICAÇÃO */}
                         <SectionTitle>Identificação</SectionTitle>
                         <div className="row">
-                            <Field label="Razão Social" col="col-md-8">
-                                <input
-                                    className="form-control"
-                                    name="razaoSocial"
-                                    value={dados.razaoSocial}
-                                    onChange={alterarCampo}
-                                    placeholder="Razão social do cliente"
-                                />
-                            </Field>
-                            <Field label="CNPJ" col="col-md-4">
-                                <input
-                                    className="form-control"
-                                    name="cnpj"
-                                    value={dados.cnpj}
-                                    onChange={alterarCampo}
-                                    placeholder="00.000.000/0000-00"
-                                />
-                            </Field>
-                            <Field label="Telefone" col="col-md-4">
-                                <input
-                                    className="form-control"
-                                    name="telefone"
-                                    value={dados.telefone}
-                                    onChange={alterarCampo}
-                                    placeholder="(00) 00000-0000"
-                                />
-                            </Field>
+                        <Field label="Razão Social" col="col-md-8">
+                        <input
+                            className="form-control"
+                            name="razaoSocial"
+                            value={dados.razaoSocial}
+                            onChange={alterarCampo}
+                            placeholder="Razão social do cliente"
+                        />
+                        </Field>
+
+                        <Field label="CNPJ" col="col-md-2">
+                        <input
+                            className="form-control"
+                            name="cnpj"
+                            value={dados.cnpj}
+                            onChange={alterarCampo}
+                            placeholder="00.000.000/0000-00"
+                        />
+                        </Field>
+
+                        <Field label="Inscrição Estadual" col="col-md-2">
+                        <input
+                            className="form-control"
+                            name="ie"
+                            value={dados.ie}
+                            onChange={alterarCampo}
+                            placeholder="IE"
+                        />
+                        </Field>
+
+                        <Field label="Telefone" col="col-md-4">
+                        <input
+                            className="form-control"
+                            name="telefone"
+                            value={dados.telefone}
+                            onChange={alterarCampo}
+                            placeholder="(00) 00000-0000"
+                        />
+                        </Field>
                         </div>
 
                         {/* ENDEREÇO */}

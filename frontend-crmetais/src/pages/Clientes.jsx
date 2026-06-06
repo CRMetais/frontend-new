@@ -93,6 +93,14 @@ export function Clientes() {
       sortable: false,
       render: (cliente) => cliente.cnpj || "-",
     },
+
+    {
+      key: "ie",
+      label: "Inscrição Estadual",
+      sortable: false,
+      render: (cliente) => cliente.ie || "-",
+    },
+
     {
       key: "tabela",
       label: "Tabela",

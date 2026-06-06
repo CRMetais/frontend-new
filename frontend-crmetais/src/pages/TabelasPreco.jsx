@@ -71,39 +71,36 @@ function corMargem(margem) {
 // ─── buildTableModel — Venda ──────────────────────────────────────────────────
 
 function buildTableModelVenda(rows, todosProdutos = [], tabelaNova = false) {
-  const dateSet = new Set();
+  const isoSet     = new Set();
   const productSet = new Set();
-  const valueMap = new Map();
-  const versaoMap = new Map();
-  const isoMap = new Map();
+  const valueMap   = new Map(); // chave: "nomeProduto||isoDate"
+  const versaoMap  = new Map(); // chave: isoDate
+  const isoMap     = new Map(); // ddmm → iso (para exibição)
 
   for (const r of rows) {
     const nome   = String(r.nomeTabela ?? "").trim();
     const iso    = String(r.dataInicioValidade ?? "").trim();
-    const ddmm   = isoParaDDMM(iso);
     const preco  = r.precoProduto ?? null;
     const versao = r.versao ?? null;
-    if (!nome || !ddmm) continue;
-    dateSet.add(ddmm);
+    if (!nome || !iso) continue;
+
+    isoSet.add(iso);
     productSet.add(nome);
-    valueMap.set(`${nome}__${ddmm}`, preco);
-    versaoMap.set(ddmm, versao);
-    isoMap.set(ddmm, iso);
+    valueMap.set(`${nome}||${iso}`, preco);   // ← chave única por produto+data ISO
+    if (!versaoMap.has(iso)) versaoMap.set(iso, versao);
   }
 
   if (tabelaNova) {
-    const hoje = hojeDDMM();
-    dateSet.add(hoje);
-    isoMap.set(hoje, hojeISO());
-    versaoMap.set(hoje, 1.0);
+    const iso = hojeISO();
+    isoSet.add(iso);
+    versaoMap.set(iso, 1.0);
     for (const p of todosProdutos) productSet.add(p.nome);
   }
 
-  const datas = Array.from(dateSet).sort((a, b) =>
-    (isoMap.get(b) ?? b).localeCompare(isoMap.get(a) ?? a)
-  );
-  const produtos = Array.from(productSet).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  return { datas, produtos, valueMap, versaoMap };
+  // Ordena ISO desc — sem ambiguidade entre anos
+  const datasISO = Array.from(isoSet).sort((a, b) => b.localeCompare(a));
+  const produtos  = Array.from(productSet).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return { datasISO, produtos, valueMap, versaoMap };
 }
 
 // ─── buildTableModel — Compra ─────────────────────────────────────────────────
@@ -433,46 +430,42 @@ function AbaVenda({ usuarioComum }) {
 
   useEffect(() => { if (tabela) carregarDados(tabela); }, [tabela, carregarDados]);
 
-  const { datas, produtos, valueMap, versaoMap } = useMemo(
+  const { datasISO, produtos, valueMap, versaoMap } = useMemo(
     () => buildTableModelVenda(rows, todosProdutos, tabelaNova),
     [rows, todosProdutos, tabelaNova]
   );
 
-  const dataMaisRecente = datas[0];
-  const versaoAtual = dataMaisRecente ? versaoMap.get(dataMaisRecente) : null;
+  const isoMaisRecente = datasISO[0];
+const versaoAtual    = isoMaisRecente ? versaoMap.get(isoMaisRecente) : null;
 
-  function handleCellChange(nome, valor) {
-    setEdits((prev) => ({ ...prev, [nome]: valor }));
+function handleCellChange(nome, iso, valor) {
+  const key = `${nome}||${iso}`;
+  setEdits((prev) => ({ ...prev, [key]: valor }));
+}
+
+function handleCellBlur(nome, iso, valorDigitado) {
+  const key       = `${nome}||${iso}`;
+  const nDigitado = parseBRL(valorDigitado);
+  const nOriginal = parseBRL(valueMap.get(key));
+  if (nDigitado === null || nDigitado === nOriginal) {
+    setEdits((prev) => { const next = { ...prev }; delete next[key]; return next; });
+    return;
   }
+  setEdits((prev) => ({ ...prev, [key]: formatBRL(nDigitado) }));
+}
 
-  function handleCellBlur(nome, valorDigitado) {
-    const nDigitado = parseBRL(valorDigitado);
-    const nOriginal = parseBRL(valueMap.get(`${nome}__${dataMaisRecente}`));
-    if (nDigitado === null || nDigitado === nOriginal) {
-      setEdits((prev) => { const next = { ...prev }; delete next[nome]; return next; });
-      return;
-    }
-    handleCellChange(nome, formatBRL(nDigitado));
-  }
-
-  async function handleSalvar() {
-    setSalvando(true); setErro(""); setSucesso("");
-    try {
-      const itens = produtos
-        .map((nome) => {
-          const valorFinal = edits[nome] !== undefined
-            ? edits[nome]
-            : valueMap.get(`${nome}__${dataMaisRecente}`);
-          return { nomeProduto: nome, preco: parseBRL(valorFinal) };
-        })
-        .filter((i) => i.preco !== null && i.preco > 0);
-      await salvarPrecosEmLote(tabela, itens);
+ async function handleSalvar() {
+  const itens = produtos
+    .map((nome) => {
+      const key        = `${nome}||${isoMaisRecente}`;
+      const valorFinal = edits[key] !== undefined ? edits[key] : valueMap.get(key);
+      return { nomeProduto: nome, preco: parseBRL(valorFinal) };
+    })
+    .filter((i) => i.preco !== null && i.preco > 0);
+  await salvarPrecosEmLote(tabela, itens);
       setSucesso("Preços salvos. Nova versão criada.");
       setTabelaNova(false);
       await carregarDados(tabela);
-    } catch (e) {
-      setErro(e?.response?.data?.message || e?.message || "Erro ao salvar");
-    } finally { setSalvando(false); }
   }
 
   async function handleCriarTabela(nomeTabela) {
@@ -493,45 +486,46 @@ function AbaVenda({ usuarioComum }) {
   const qtdEdicoes = Object.keys(edits).length;
 
   const colunas = useMemo(() => [
-    { key: "produto", label: "Produto", sortable: true },
-    ...datas.map((d, idx) => ({
-      key: `data_${d}`,
-      label: d,
-      sortable: false,
-      render: (row) => {
-        const nome     = row.produto;
-        const current  = valueMap.get(`${nome}__${d}`) ?? null;
-        const prevDate = datas[idx + 1];
-        const prev     = prevDate ? (valueMap.get(`${nome}__${prevDate}`) ?? null) : null;
+  { key: "produto", label: "Produto", sortable: true },
+  ...datasISO.map((iso, idx) => ({          // ← datasISO em vez de datas
+    key: `data_${iso}`,                      // ← chave única com ISO
+    label: isoParaDDMM(iso),                 // ← exibe DD/MM
+    sortable: false,
+    render: (row) => {
+      const nome     = row.produto;
+      const key      = `${nome}||${iso}`;    // ← chave com ISO
+      const current  = valueMap.get(key) ?? null;
+      const prevISO  = datasISO[idx + 1];
+      const prev     = prevISO ? (valueMap.get(`${nome}||${prevISO}`) ?? null) : null;
 
-        let trendStyle = {};
-        if (!usuarioComum && prevDate) {
-          const c = parseBRL(current);
-          const p = parseBRL(prev);
-          if (c !== null && p !== null) {
-            if (c > p) trendStyle = { color: "#15803d" };
-            else if (c < p) trendStyle = { color: "#b91c1c" };
-          }
+      let trendStyle = {};
+      if (!usuarioComum && prevISO) {
+        const c = parseBRL(current);
+        const p = parseBRL(prev);
+        if (c !== null && p !== null) {
+          if (c > p) trendStyle = { color: "#15803d" };
+          else if (c < p) trendStyle = { color: "#b91c1c" };
         }
+      }
 
-        const isEditavel   = idx === 0 && !usuarioComum;
-        const valorEdit    = edits[nome];
-        const displayValue = valorEdit !== undefined ? valorEdit : formatBRL(current);
+      const isEditavel   = idx === 0 && !usuarioComum;
+      const editVal      = edits[key];        // ← chave com ISO
+      const displayValue = editVal !== undefined ? editVal : formatBRL(current);
 
-        return isEditavel ? (
-          <input
-            style={{ ...cellInputStyle, ...trendStyle }}
-            value={displayValue}
-            onChange={(e) => handleCellChange(nome, e.target.value)}
-            onFocus={(e) => e.target.select()}
-            onBlur={(e) => handleCellBlur(nome, e.target.value)}
-          />
-        ) : (
-          <span style={trendStyle}>{displayValue}</span>
-        );
-      },
-    })),
-  ], [datas, valueMap, edits, usuarioComum]);
+      return isEditavel ? (
+        <input
+          style={{ ...cellInputStyle, ...trendStyle }}
+          value={displayValue}
+          onChange={(e) => handleCellChange(nome, iso, e.target.value)}   // ← passa iso
+          onFocus={(e) => e.target.select()}
+          onBlur={(e) => handleCellBlur(nome, iso, e.target.value)}       // ← passa iso
+        />
+      ) : (
+        <span style={trendStyle}>{displayValue}</span>
+      );
+    },
+  })),
+], [datasISO, valueMap, edits, usuarioComum]);
 
   const dadosTabela = useMemo(
     () => produtos.map((nome) => ({ _rowKey: nome, produto: nome })),
