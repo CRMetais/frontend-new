@@ -649,18 +649,35 @@ export function Boleta() {
         return;
       }
 
-      const payload = {
-        idFornecedor: Number(clienteSelecionadoId),
-        tipoNota,
-        classeNota,
-        itens: itensBoleta.map((item) => ({
-          produtoId: Number(item.produtoId),
-          peso: Number(item.peso),
-          valorUnitario: Number(item.valorUnitario),
-          total: Number(item.total),
-          bags: Number(item.bags),
-        })),
-      };
+      let payload;
+
+      if (tipoNota === "ENTRADA") {
+        payload = {
+          idFornecedor: Number(clienteSelecionadoId),
+          tipoNota,
+          classeNota,
+          itens: itensBoleta.map((item) => ({
+            produtoId: Number(item.produtoId),
+            peso: Number(item.peso),
+            valorUnitario: Number(item.valorUnitario),
+            total: Number(item.total),
+            bags: Number(item.bags),
+          })),
+        };
+      } else {
+        payload = {
+          idCliente: Number(clienteSelecionadoId),
+          tipoNota,
+          classeNota,
+          itens: itensBoleta.map((item) => ({
+            produtoId: Number(item.produtoId),
+            peso: Number(item.peso),
+            valorUnitario: Number(item.valorUnitario),
+            total: Number(item.total),
+            bags: Number(item.bags),
+          })),
+        };
+      }
 
       const resJava = await api.post("/nota-fiscal", payload);
 
