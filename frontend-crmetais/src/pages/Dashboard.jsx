@@ -37,7 +37,7 @@ export function Dashboard() {
     }, [totalVendas, totalCompras]);
 
     useEffect(() => {
-        document.title = "Dashboard";
+        document.title = "CR Metais | Dashboard";
     }, []);
 
     const formatarPeso = (valor) => {

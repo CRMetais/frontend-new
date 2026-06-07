@@ -14,6 +14,10 @@ export function Resumo() {
     const [clienteSel, setClienteSel] = useState("");
 
     useEffect(() => {
+        document.title = "CR Metais | Resumo";
+    }, []);
+
+    useEffect(() => {
 
         api.get("/resumos")
             .then((res) => {

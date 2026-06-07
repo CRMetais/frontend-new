@@ -27,6 +27,8 @@ export function GestaoDeDados() {
     c.nome?.toLowerCase().includes(filtroNome.toLowerCase())
   );
 
+  
+
   // ================================
   // Carregar colaboradores
   // ================================
@@ -36,11 +38,11 @@ export function GestaoDeDados() {
       const data = await listarUsuarios();
       const formatados = Array.isArray(data)
         ? data.map((u) => ({
-            id: u.idUsuario || u.id,
-            nome: u.nome,
-            email: u.email,
-            cargo: u.cargo ?? "—",
-          }))
+          id: u.idUsuario || u.id,
+          nome: u.nome,
+          email: u.email,
+          cargo: u.cargo ?? "—",
+        }))
         : [];
       setColaboradores(formatados);
     } catch (error) {
@@ -74,7 +76,12 @@ export function GestaoDeDados() {
   // ================================
   // Excluir colaborador
   // ================================
-  async function handleExcluir(id) {
+
+  const [showModalExcluir, setShowModalExcluir] = useState(false);
+  const [colaboradorParaExcluir, setColaboradorParaExcluir] = useState(null);
+
+  function handleExcluir(id) {
+
     const idLogado = getUsuarioLogadoId();
 
     if (id === idLogado) {
@@ -82,22 +89,44 @@ export function GestaoDeDados() {
       return;
     }
 
-    const confirmar = window.confirm(
-      "Deseja realmente excluir este colaborador?"
-    );
-    if (!confirmar) return;
+    setColaboradorParaExcluir(id);
+    setShowModalExcluir(true);
+
+  }
+
+  async function confirmarExclusaoColaborador() {
 
     try {
-      await excluirUsuario(id);
+
+      await excluirUsuario(colaboradorParaExcluir);
+
       carregarColaboradores();
+
+      setShowModalExcluir(false);
+      setColaboradorParaExcluir(null);
+
     } catch (error) {
+
       if (error.response?.status === 403) {
+
         alert("Você não pode excluir sua própria conta.");
+
       } else {
+
         console.error(error);
         alert("Erro ao excluir colaborador");
+
       }
+
     }
+
+  }
+
+  function cancelarExclusaoColaborador() {
+
+    setShowModalExcluir(false);
+    setColaboradorParaExcluir(null);
+
   }
 
   // ================================
@@ -125,9 +154,8 @@ export function GestaoDeDados() {
       sortable: true,
       render: (colaborador) => (
         <span
-          className={`badge ${
-            colaborador.cargo === "ADMIN" ? "bg-dark" : "bg-secondary"
-          }`}
+          className={`badge ${colaborador.cargo === "ADMIN" ? "bg-dark" : "bg-secondary"
+            }`}
         >
           {colaborador.cargo}
         </span>
@@ -232,6 +260,55 @@ export function GestaoDeDados() {
           </div>
         </div>
       </div>
+
+      {showModalExcluir && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Excluir colaborador
+                </h5>
+
+                <button
+                  className="btn-close"
+                  onClick={cancelarExclusaoColaborador}
+                />
+              </div>
+
+              <div className="modal-body">
+                <p className="mb-2">
+                  Deseja realmente excluir este colaborador?
+                </p>
+
+                <div className="text-muted small">
+                  Esta ação não poderá ser desfeita.
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={cancelarExclusaoColaborador}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  className="btn btn-danger"
+                  onClick={confirmarExclusaoColaborador}
+                >
+                  Excluir colaborador
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

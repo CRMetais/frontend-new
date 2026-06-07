@@ -31,6 +31,10 @@ export function Fornecedores() {
     const [showDetalhes, setShowDetalhes] = useState(false);
     const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
 
+    useEffect(() => {
+        document.title = "CR Metais | Fornecedores";
+    }, []);
+
     function abrirNovoFornecedor() {
         setModoEdicao(false);
         setFornecedorEditandoId(null);
@@ -89,19 +93,26 @@ export function Fornecedores() {
     // Excluir fornecedor
     // ================================
 
-    async function handleExcluir(idFornecedor) {
+    const [showModalExcluir, setShowModalExcluir] = useState(false);
+    const [fornecedorParaExcluir, setFornecedorParaExcluir] = useState(null);
 
-        const confirmar = window.confirm(
-            "Deseja realmente excluir este fornecedor?"
-        );
+    function handleExcluir(idFornecedor) {
 
-        if (!confirmar) return;
+        setFornecedorParaExcluir(idFornecedor);
+        setShowModalExcluir(true);
+
+    }
+
+    async function confirmarExclusaoFornecedor() {
 
         try {
 
-            await deletarFornecedor(idFornecedor);
+            await deletarFornecedor(fornecedorParaExcluir);
 
             carregarFornecedores();
+
+            setShowModalExcluir(false);
+            setFornecedorParaExcluir(null);
 
         } catch (error) {
 
@@ -109,6 +120,13 @@ export function Fornecedores() {
             alert("Erro ao excluir fornecedor");
 
         }
+
+    }
+
+    function cancelarExclusaoFornecedor() {
+
+        setShowModalExcluir(false);
+        setFornecedorParaExcluir(null);
 
     }
 
@@ -244,6 +262,55 @@ export function Fornecedores() {
                 </div>
 
             </div>
+
+            {showModalExcluir && (
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                >
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    Excluir fornecedor
+                                </h5>
+
+                                <button
+                                    className="btn-close"
+                                    onClick={cancelarExclusaoFornecedor}
+                                />
+                            </div>
+
+                            <div className="modal-body">
+                                <p className="mb-2">
+                                    Deseja realmente excluir este fornecedor?
+                                </p>
+
+                                <div className="text-muted small">
+                                    Esta ação não poderá ser desfeita.
+                                </div>
+                            </div>
+
+                            <div className="modal-footer">
+                                <button
+                                    className="btn btn-outline-secondary"
+                                    onClick={cancelarExclusaoFornecedor}
+                                >
+                                    Cancelar
+                                </button>
+
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={confirmarExclusaoFornecedor}
+                                >
+                                    Excluir fornecedor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

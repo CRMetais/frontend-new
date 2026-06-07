@@ -58,19 +58,31 @@ export function Clientes() {
   // ================================
   // Excluir cliente
   // ================================
-  async function handleExcluir(idCliente) {
-    const confirmar = window.confirm(
-      "Deseja realmente excluir este cliente?"
-    );
-    if (!confirmar) return;
 
+  const [showModalExcluir, setShowModalExcluir] = useState(false);
+  const [clienteParaExcluir, setClienteParaExcluir] = useState(null);
+
+  function handleExcluir(idCliente) {
+    setClienteParaExcluir(idCliente);
+    setShowModalExcluir(true);
+  }
+
+  async function confirmarExclusaoCliente() {
     try {
-      await deletarCliente(idCliente);
+      await deletarCliente(clienteParaExcluir);
       carregarClientes();
+
+      setShowModalExcluir(false);
+      setClienteParaExcluir(null);
     } catch (error) {
       console.error(error);
       alert("Erro ao excluir cliente");
     }
+  }
+
+  function cancelarExclusaoCliente() {
+    setShowModalExcluir(false);
+    setClienteParaExcluir(null);
   }
 
   // ================================
@@ -202,6 +214,52 @@ export function Clientes() {
           </div>
         </div>
       </div>
+
+      {showModalExcluir && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Excluir cliente</h5>
+                <button
+                  className="btn-close"
+                  onClick={cancelarExclusaoCliente}
+                />
+              </div>
+
+              <div className="modal-body">
+                <p className="mb-2">
+                  Deseja realmente excluir este cliente?
+                </p>
+
+                <div className="text-muted small">
+                  Esta ação não poderá ser desfeita.
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={cancelarExclusaoCliente}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  className="btn btn-danger"
+                  onClick={confirmarExclusaoCliente}
+                >
+                  Excluir cliente
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
