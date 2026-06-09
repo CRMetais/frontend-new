@@ -21,7 +21,7 @@ jobs:
         working-directory: ./frontend-crmetais
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env
-          echo "VITE_LAMBDA_XML_URL=${{ secrets.VITE_LAMBDA_XML_URL }}" >> .env
+          echo "VITE_LAMBDA_XLSX_URL=${{ secrets.VITE_LAMBDA_XLSX_URL }}" >> .env
 
       - name: Build
         working-directory: ./frontend-crmetais
