@@ -5,8 +5,8 @@ export const buscarHistorico = async (tipo, pagina = 0, tamanho = 10) => {
     const response = await api.get("/historico", {
       params: {
         tipo,
-        pagina,   // ✅ igual backend
-        tamanho   // ✅ igual backend
+        pagina,
+        tamanho
       }
     });
 
@@ -18,30 +18,10 @@ export const buscarHistorico = async (tipo, pagina = 0, tamanho = 10) => {
   }
 };
 
-// export const baixarHistoricoCsv = async (tipo, dataInicio, dataFim) => {
-//   try {
-
-//     // Chama a Lambda via API Gateway
-//     const lambdaUrl = import.meta.env.VITE_LAMBDA_URL;
-//     const url = `${lambdaUrl}?tipo=${tipo}&dataInicio=${dataInicio}&dataFim=${dataFim}`;
-
-//     const response = await fetch(url, { method: "GET" });
-
-//     if (!response.ok) throw new Error("Erro ao chamar Lambda");
-
-//     const urlDownload = await response.text();
-
-//     return urlDownload;
-
-//   } catch (error) {
-//     console.error("Erro ao baixar CSV:", error);
-//     throw error;
-//   }
-// };
-
-export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
+// 🔥 LAMBDA
+export const baixarHistoricoXlsx = async (tipo, dataInicio, dataFim) => {
   try {
-    const lambdaUrl = import.meta.env.VITE_LAMBDA_XML_URL || "http://localhost:8080/historico/xml";
+    const lambdaUrl = import.meta.env.VITE_LAMBDA_XLSX_URL;
     const url = `${lambdaUrl}?tipo=${tipo}&dataInicio=${dataInicio}&dataFim=${dataFim}`;
 
     const responseLambda = await fetch(url, { method: "GET" });
@@ -51,28 +31,24 @@ export const baixarHistoricoXml = async (tipo, dataInicio, dataFim) => {
     window.location.href = presignedUrl;
 
   } catch (error) {
-    console.error("Erro ao baixar XML:", error);
+    console.error("Erro ao baixar XLSX:", error);
     throw error;
   }
 };
 
+// 💻 LOCAL
+export async function baixarHistoricoXlsxLocal(tipo, dataInicio, dataFim) {
+  const response = await api.get("/historico/xlsx", {
+    params: { tipo, dataInicio, dataFim },
+    responseType: "blob"
+  });
 
-export async function baixarHistoricoXmlLocal(tipo, dataInicio, dataFim) {
-
-    const response = await fetch(
-        `http://localhost:8080/historico/xml?tipo=${tipo}&dataInicio=${dataInicio}&dataFim=${dataFim}`
-    );
-
-    const xml = await response.text();
-
-    const blob = new Blob([xml], { type: "application/xml" });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `historico_${dataInicio.replaceAll("-", "")}_${dataFim.replaceAll("-", "")}.xml`;
-    a.click();
-
-    window.URL.revokeObjectURL(url);
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `historico_${dataInicio.replaceAll("-", "")}_${dataFim.replaceAll("-", "")}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 }
