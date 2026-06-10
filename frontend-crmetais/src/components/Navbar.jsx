@@ -1,10 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { BotaoDeslogar } from "./Buttons";
+import { isUsuarioComum } from "../services/UsuarioService";
 import Logo from "../assets/logo.png";
 import "../styles/Navbar.css";
 
 export default function Navbar() {
+
+    const usuarioComum = isUsuarioComum();
 
     return (
 
@@ -36,8 +39,8 @@ export default function Navbar() {
                         <NavLink to="/clientes" className="nav-link">Clientes</NavLink>
                         <NavLink to="/tabelas-preco" className="nav-link">Tabelas Preço</NavLink>
                         <NavLink to="/boleta" className="nav-link">Boleta</NavLink>
-                        <NavLink to="/gestao-de-dados" className="nav-link">Gestão de Dados</NavLink>
-                        <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
+                        {!usuarioComum && <NavLink to="/gestao-de-dados" className="nav-link">Gestão de Dados</NavLink>}
+                        {!usuarioComum && <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>}
                     </div>
 
                     {/* Botão sair */}
