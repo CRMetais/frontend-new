@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import TabelaGenerica from "../components/TabelaGenerica";
 import { InputPesquisa } from '../components/Inputs';
-import { BotaoXml, BotaoAlternarHistorico } from "../components/Buttons";
+import { BotaoXlsx, BotaoAlternarHistorico } from "../components/Buttons";
 
 import { buscarHistorico, baixarHistoricoXlsx, baixarHistoricoXlsxLocal } from "../services/HIstoricoService";
 import { isUsuarioComum } from "../services/UsuarioService";
@@ -98,7 +98,7 @@ export function Historico() {
         setErroData("");
     };
 
-    const handleBaixarXml = async () => {
+    const handleBaixarXlsx = async () => {
         if (!dataInicio || !dataFim) {
             setErroData("Selecione um período de tempo.");
             return;
@@ -118,8 +118,8 @@ export function Historico() {
 
             setMostrarModal(false);
         } catch (error) {
-            console.error("Erro ao gerar XML:", error);
-            setErroData("Não foi possível gerar o XML. Tente novamente.");
+            console.error("Erro ao gerar Xlsx:", error);
+            setErroData("Não foi possível gerar o Xlsx. Tente novamente.");
         }
     };
 
@@ -312,7 +312,7 @@ export function Historico() {
                 </div>
 
                 <div className="container-botoes-historico d-flex flex-column flex-lg-row gap-2 justify-content-lg-end flex-shrink-0">
-                    <BotaoXml
+                    <BotaoXlsx
                         onClick={() => setMostrarModal(true)}
                     />
 
@@ -438,7 +438,7 @@ export function Historico() {
                                 </button>
                                 <button
                                     className="btn btn-primary"
-                                    onClick={handleBaixarXml}
+                                    onClick={handleBaixarXlsx}
                                 >
                                     Confirmar
                                 </button>
