@@ -189,9 +189,16 @@ export default function NovoFornecedorModal({ show, onClose, onSuccess, modoEdic
         apelido: dados.apelido,
         tipoFornecedor: dados.tipoFornecedor,
         idEndereco: idEnderecoFinal,
-        idTabelaPreco: dados.idTabelaPreco ? Number(dados.idTabelaPreco) : null,
-        idUsuario: dados.idUsuario ? Number(dados.idUsuario) : null,
+        tabelaPreco: dados.idTabelaPreco
+      ? { idTabela: Number(dados.idTabelaPreco) }
+      : null,
+
+    responsavel: dados.idUsuario
+      ? { idUsuario: Number(dados.idUsuario) }
+      : null,
       };
+
+      console.log("DTO enviado:", dtoFornecedor);
 
       let idFornecedorFinal = fornecedorId;
       if (modoEdicao && fornecedorId) {

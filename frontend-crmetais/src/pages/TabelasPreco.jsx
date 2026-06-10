@@ -462,6 +462,10 @@ function handleCellBlur(nome, iso, valorDigitado) {
       return { nomeProduto: nome, preco: parseBRL(valorFinal) };
     })
     .filter((i) => i.preco !== null && i.preco > 0);
+    console.log("Salvando tabela:", tabela);
+console.log("Itens enviados:", itens);
+
+  await salvarPrecosEmLote(tabela, itens);
   await salvarPrecosEmLote(tabela, itens);
       setSucesso("Preços salvos. Nova versão criada.");
       setTabelaNova(false);

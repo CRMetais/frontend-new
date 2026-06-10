@@ -11,7 +11,7 @@ export function Resumo() {
 
     const [resumo, setResumo] = useState(null);
     const [busca, setBusca] = useState("");
-    const [clienteSel, setClienteSel] = useState("");
+    const [clienteSel, setClienteSel] = useState("VITAL");
 
     useEffect(() => {
         document.title = "CR Metais | Resumo";
